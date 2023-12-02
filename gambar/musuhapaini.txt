@@ -1,0 +1,11 @@
+O OOO o  O O O   OOO O  z
+O O O O  O O O   O O OOO
+O O O O  O O O   OOO O
+O O O O  OOO OOO O O OOO
+
+  OO 
+V O O
+  O O
+O O O
+  OO 
+;
