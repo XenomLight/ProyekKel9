@@ -1,0 +1,20 @@
+                                             Game Name: Hive                                                 z
+
+                                           What's the Concept:                       
+                          Game tebak kata yang digabung dengan mekanika pertarungan
+                          simpel di mana pemain harus memecahkan kata dengan cepat 
+                          guna melancarkan serangan terhadap musuh.
+
+Control: 
+Gunakan ARROW KEYS untuk navigasi                              Gunakan ARROW KEYS untuk menggunakan skill
+pada tampilan menu                                                                         pada sesi game
+
+	   Perumpamaan ARROW KEYS:                                    Perumpamaan ARROW KEYS:
+                    ^-----Scroll ke Atas               Menghapus Satu Kata---< o >---Menghapus Semua Kata
+        Kembali---< o >---Berikutnya                                              
+Scroll Ke Bawah-----V                                                      Gunakan keyboard untuk menebak
+
+
+Tekan ARROW KEY KIRI 
+untuk keluar dari menu ini.
+;
