@@ -3,30 +3,23 @@
 #include <conio.h>
 #include <windows.h>
 #include <iomanip>
-#include <string>
 #include <ctime>
-#include "tebakkata.h"
-#include "cargame.h"
-#include <stdio.h>
-#include <limits>
-#include <thread>
-#include <chrono>
 using namespace std;
 
-HANDLE Console = GetStdHandle(STD_OUTPUT_HANDLE);
-COORD Cursorposition;
+HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+COORD CursorPosition;
 
-void play(string userid,int skor); void transition(); void instruction(); void option(); void credit();
+void play(); void transition(); void instruction(); void option(); void credit();
 void powerUP(int input, int type);
 void updateUI(string section);
 int loadData(string location, string arr[]);
-void spawnEnemy(); void enemyAttack(); void giftFromEnemy(); void playerDied(string userid);
+void spawnEnemy(); void enemyAttack(); void giftFromEnemy(); void playerDied();
 void wordAssigner(); int compareWord(char input); void isWordCorrect(); void addNotification(int xModifier, string teks); void cleanNotification();
 int isRightNumber(int input);
 int controller(int *posX, int *posY, int xPar1, int yPar1, int xPar2, int yPar2);
 int findSpacesDash(string kata);
-void Gotoxy(int x, int y);
-void SetCursor(bool visible, DWORD size);
+void gotoxy(int x, int y);
+void setcursor(bool visible, DWORD size);
 string changeCase(string teks, char to);
 int loadImage(string location, int posX, int posY, char xBorder = 'z', char yBorder = ';');
 void animate(string location, int posX, int posY, char xBorder = '"', char yBorder = ';');
@@ -54,10 +47,7 @@ int damageFromWrongGuess = 1;
 float percentageEnemyDiedScore = 0.8;
 float percentageWordCorrectScore = 0.8;
 float percentageEnemyDiedHP = 0.5;
-float minPercenWordRanValue = 0.4, maxPercenWordRanValue = 0.6;
-int minEnemyAtkSpdRanValue = 3, maxEnemyAtkSpdRanValue = 7;
-int minEnemyDmgRanValue = 5, maxEnemyDmgRanValue = 15;
-
+float minPercenRanValue = 0.4, maxPercenRanValue = 0.6;
 int first = true;
 
 struct player{
@@ -85,38 +75,39 @@ pointer menuPointer;
 player one;
 gameData session;
 
-bool mainkata(string userid,int skor){
+int main(){
     srand(time(0));
-    SetCursor(0, 0);
+    setcursor(0, 0);
     for (int i = 0; i < 8; i++) session.wordID[i] = NULL;
     session.jumlahBuah = loadData("./data/buah.txt", session.listBuah);
     session.jumlahHewan = loadData("./data/hewan.txt", session.listHewan);
     session.jumlahSport = loadData("./data/sport.txt", session.listSport);
     if (session.jumlahBuah == -1 || session.jumlahHewan == -1 || session.jumlahSport == -1) return 1;
+
     instruction();
     while(1){
-        if (fromOtherMenu) system("cls"); system("color 07");
+        if (fromOtherMenu) system("cls");
         loadImage("./gambar/title.txt", 35 + xPosition, 1 + yPosition, '[', ']');
         loadImage("./gambar/menuOption.txt", 47 + xPosition, 10 + yPosition, 'z', ';');
         fromOtherMenu = false;
 
-        Gotoxy(menuPointer.posX, menuPointer.posY); cout << ">";
-        do isArrow = controller(&menuPointer.posX, &menuPointer.posY, 48 + xPosition, 10 + yPosition, 49 + xPosition, 14 + yPosition);
+        gotoxy(menuPointer.posX, menuPointer.posY); cout << ">";
+        do isArrow = controller(&menuPointer.posX, &menuPointer.posY, 48 + xPosition, 10 + yPosition, 49 + xPosition, 13 + yPosition);
             while (isArrow == 0);
-        if (menuPointer.posY == 10 + yPosition && isArrow == 2){if (first) transition(); play(userid,skor);}
+        if (menuPointer.posY == 10 + yPosition && isArrow == 2){if (first) transition(); play();}
         else if (menuPointer.posY == 11 + yPosition && isArrow == 2) option();
         else if (menuPointer.posY == 12 + yPosition && isArrow == 2) instruction();
         else if (menuPointer.posY == 13 + yPosition && isArrow == 2) credit();
-        else if (menuPointer.posY == 14 + yPosition && isArrow == 2){system("cls"); return 1;}
+        else if (menuPointer.posY == 14 + yPosition && isArrow == 2){system("cls"); return 0;}
     }
 }
 
-void play(string userid,int skor){
+void play(){
     int iters = 0;
     loadImage("./gambar/UI.txt", 30 + xPosition, 0 + yPosition);
-    Gotoxy(42 + xPosition, 19 + yPosition); system("pause");
+    gotoxy(42 + xPosition, 19 + yPosition); system("pause");
     if (first){spawnEnemy(); first = false;}
-    updateUI("selected"); updateUI("sane"); updateUI("score"); updateUI("powerup"); updateUI("list");
+    updateUI("selected"); updateUI("sane"); updateUI("score"); updateUI("powerup");
     while(1){
         if (!session.enemyIsAttacking) system("color 07");
         isWordCorrect();
@@ -124,7 +115,7 @@ void play(string userid,int skor){
         if (session.enemyHP <= 0){
             giftFromEnemy(); spawnEnemy(); session.enemyTime = 0;
             cleanNotification();
-            addNotification(10, "You defeated the enemy!"); notificationDelay = 1000;}
+            addNotification(0, "You defeated the enemy!"); notificationDelay = 1000;}
 
         if (kbhit()){
             int input = getch();
@@ -133,7 +124,6 @@ void play(string userid,int skor){
             else if (input == 77){
                 powerUP(input, 2); updateUI("powerup");}
             else if (input == 13){
-                system("color 07");
                 fromOtherMenu = true;
                 menuPointer.posX = 47 + xPosition;
                 menuPointer.posY = 10 + yPosition;
@@ -153,8 +143,8 @@ void play(string userid,int skor){
         if (session.enemyTime == session.enemyAtkSpeed + 100){enemyAttack(); session.enemyIsAttacking = true; iters = 0;}
         else if (session.enemyTime >= session.enemyAtkSpeed + 100) session.enemyTime = 0;
         else if (session.enemyTime % 1000){
-            Gotoxy(82 + xPosition, 27 + yPosition); cout << 0;
-            Gotoxy(83 + xPosition, 27 + yPosition); cout << (1000 + session.enemyAtkSpeed-session.enemyTime)/1000;
+            gotoxy(82 + xPosition, 27 + yPosition); cout << 0;
+            gotoxy(83 + xPosition, 27 + yPosition); cout << (1000 + session.enemyAtkSpeed-session.enemyTime)/1000;
         }
 
         if (session.enemyIsAttacking){
@@ -197,7 +187,7 @@ void play(string userid,int skor){
         else if (one.sane <= 0){
             one.sane = 0;
             updateUI("sane");
-            playerDied(userid);
+            playerDied();
             break;
         }
     }
@@ -217,7 +207,7 @@ void powerUP(int input, int type){
                 addNotification(6, "Kata yang ingin dihapus tidak ada!");
             }
         } else {
-            addNotification(1, "You don't have any 'Exterminate One' power!");
+            addNotification(6, "You don't have any 'Exterminate One' power!");
         }
     } else if (type == 2){
         if (one.powerUP2 > 0){
@@ -225,7 +215,7 @@ void powerUP(int input, int type){
                 session.wordRan[i] = session.word[i];
             } one.powerUP2 -= 1;
         } else {
-            addNotification(1, "You don't have any 'Exterminate All' power!");
+            addNotification(6, "You don't have any 'Exterminate All' power!");
         }
     } notificationDelay = 1000;
 }
@@ -233,38 +223,38 @@ void powerUP(int input, int type){
 void updateUI(string section){
     section = changeCase(section, 'l');
     if (section == "score"){
-        if (one.score < 10000){Gotoxy(72 + xPosition, 27 + yPosition); cout << setw(3) << one.score;}
-        else {Gotoxy(70 + xPosition, 27 + yPosition); cout << setw(6) << one.score;}
+        if (one.score < 10000){gotoxy(72 + xPosition, 27 + yPosition); cout << setw(3) << one.score;}
+        else {gotoxy(70 + xPosition, 27 + yPosition); cout << setw(6) << one.score;}
     } else if (section == "enemy"){
-        Gotoxy(72 + xPosition, 8 + yPosition); cout << "Enemy's HP";
-        Gotoxy(72 + xPosition, 7 + yPosition); cout << "    ";
-        Gotoxy(72 + xPosition, 7 + yPosition); cout << setw(5) << session.enemyHP << "/" << session.enemyMHP;
+        gotoxy(72 + xPosition, 8 + yPosition); cout << "Enemy's HP";
+        gotoxy(72 + xPosition, 7 + yPosition); cout << "    ";
+        gotoxy(72 + xPosition, 7 + yPosition); cout << setw(5) << session.enemyHP << "/" << session.enemyMHP;
     } else if (section == "sane"){
-        Gotoxy(59 + xPosition, 27 + yPosition); cout << setw(4) << one.sane << "    ";
-        Gotoxy(59 + xPosition, 27 + yPosition); cout << setw(4) << one.sane << "%";
+        gotoxy(59 + xPosition, 27 + yPosition); cout << setw(4) << one.sane << "    ";
+        gotoxy(59 + xPosition, 27 + yPosition); cout << setw(4) << one.sane << "%";
     } else if (section == "powerup"){
-        Gotoxy(52 + xPosition, 21 + yPosition); cout << one.powerUP1;
-        Gotoxy(79 + xPosition, 21 + yPosition); cout << one.powerUP2;
+        gotoxy(52 + xPosition, 21 + yPosition); cout << one.powerUP1;
+        gotoxy(79 + xPosition, 21 + yPosition); cout << one.powerUP2;
     } else if (section == "selected"){
-        Gotoxy(72 + xPosition, 23 + yPosition); cout << "          ";
-        Gotoxy(62 + xPosition, 24 + yPosition); cout << "                    ";
+        gotoxy(72 + xPosition, 23 + yPosition); cout << "          ";
+        gotoxy(62 + xPosition, 24 + yPosition); cout << "                    ";
         if (session.selectedWord == -1 || findNumber(session.wordID, wordCount, session.selectedWord+1) == -1){
             session.selectedWord = -1;
-            Gotoxy(72 + xPosition, 23 + yPosition); cout << "NONE";
+            gotoxy(72 + xPosition, 23 + yPosition); cout << "NONE";
         } else {
-            Gotoxy(72 + xPosition, 23 + yPosition); cout << session.wordType[session.selectedWord];
-            Gotoxy(62 + xPosition, 24 + yPosition); cout << session.selectedWord + 1 << ". " << session.wordRan[session.selectedWord];
+            gotoxy(72 + xPosition, 23 + yPosition); cout << session.wordType[session.selectedWord];
+            gotoxy(62 + xPosition, 24 + yPosition); cout << session.selectedWord + 1 << ". " << session.wordRan[session.selectedWord];
         }
     } else if (section == "list"){
         for (int i = 0; i < wordCount; i++){
             if (i < 4){
-                Gotoxy(32 + xPosition, 23 + i + yPosition);
-                if (findNumber(session.wordID, wordCount, i+1) != -1){cout << i+1 << ". " << session.wordType[i]; Gotoxy(41 + xPosition, 23 + i + yPosition); cout << session.wordDmg[i];}
+                gotoxy(32 + xPosition, 23 + i + yPosition);
+                if (findNumber(session.wordID, wordCount, i+1) != -1){cout << i+1 << ". " << session.wordType[i]; gotoxy(41 + xPosition, 23 + i + yPosition); cout << session.wordDmg[i];}
                 else cout << "            ";
             }
             else {
-                Gotoxy(45 + xPosition, 19 + i + yPosition);
-                if (findNumber(session.wordID, wordCount, i+1) != -1){cout << i+1 << ". " << session.wordType[i]; Gotoxy(54 + xPosition, 19 + i + yPosition); cout << session.wordDmg[i];}
+                gotoxy(45 + xPosition, 19 + i + yPosition);
+                if (findNumber(session.wordID, wordCount, i+1) != -1){cout << i+1 << ". " << session.wordType[i]; gotoxy(54 + xPosition, 19 + i + yPosition); cout << session.wordDmg[i];}
                 else cout << "            ";
             }
         }
@@ -278,8 +268,8 @@ void spawnEnemy(){
     else if (type <= 9) session.enemyMHP = random(61, 90);
     session.enemyHP = session.enemyMHP;
 
-    session.enemyDmg = random(minEnemyDmgRanValue, maxEnemyDmgRanValue);
-    session.enemyAtkSpeed = random(minEnemyAtkSpdRanValue, maxEnemyAtkSpdRanValue) * 1000;
+    session.enemyDmg = random(5, 15);
+    session.enemyAtkSpeed = random(3, 7) * 1000;
 }
 
 void enemyAttack(){
@@ -291,22 +281,16 @@ void enemyAttack(){
 
 void giftFromEnemy(){
     one.score += percentageEnemyDiedScore * session.enemyMHP + (session.enemyAtkSpeed/1000) * 0.5;
-    one.sane += percentageEnemyDiedHP * session.enemyMHP + (session.enemyAtkSpeed/1000) * 0.5;
+    one.sane += percentageEnemyDiedHP * session.enemyMHP + (session.enemyAtkSpeed) * 0.5;
     updateUI("score"); updateUI("sane");
 }
 
-void playerDied(string userid){
-    menuPointer.posX = 47 + xPosition;
-    menuPointer.posY = 10 + yPosition;
-    session.enemyIsHit = false; session.enemyIsAttacking = false;
-    updatedata(userid,one.score);
-    one.score = 0; one.sane = 100; one.powerUP1 = one.powerUP2 = 0;
-    for (int i = 0; i < wordCount; i++) session.wordID[i] = 0;
-    session.wordSize = 0; sleepCount = 0;
+void playerDied(){
+    one.score = 0; one.sane = 100; one.powerUP1 = one.powerUP2 = 0; for (int i = 0; i < wordCount; i++) session.wordID[i] = 0;
     first = true; fromOtherMenu = true;
     cleanNotification();
-    Gotoxy(32 + xPosition, 17 + yPosition); cout << "lol you died...";
-    Gotoxy(42 + xPosition, 19 + yPosition); system("pause");
+    gotoxy(32 + xPosition, 17 + yPosition); cout << "lol you died...";
+    gotoxy(42 + xPosition, 19 + yPosition); system("pause");
 }
 
 void wordAssigner(){
@@ -327,7 +311,7 @@ void wordAssigner(){
 
         session.wordRan[index] = session.word[index];
         int realLength = session.word[index].length()-findSpacesDash(session.word[index]);
-        int letterRandomizedCount = random(minPercenWordRanValue * realLength, maxPercenWordRanValue * realLength);
+        int letterRandomizedCount = random(minPercenRanValue * realLength, maxPercenRanValue * realLength);
         char letterRandomized[1000]; for (int i = 0; i < 1000; i++) letterRandomized[i] = NULL;
         int letterIndex;
         for (int i = 0; i < letterRandomizedCount; i++){
@@ -392,11 +376,11 @@ void isWordCorrect(){
 }
 
 void addNotification(int xModifier, string teks){
-    Gotoxy(36 + xModifier + xPosition, 19 + yPosition); cout << teks;
+    gotoxy(36 + xModifier + xPosition, 19 + yPosition); cout << teks;
 }
 
 void cleanNotification(){
-    Gotoxy(36 + xPosition, 19 + yPosition); cout << "                                              ";
+    gotoxy(36 + xPosition, 19 + yPosition); cout << "                                              ";
 }
 
 int findSpacesDash(string kata){
@@ -447,21 +431,21 @@ void option(){
         system("cls");
         loadImage("./gambar/title.txt", 35 + xPosition, 1 + yPosition, '[', ']');
         loadImage("./gambar/option.txt", 35 + xPosition, 10 + yPosition, 'z', ';');
-        Gotoxy(38 + xPosition, 11 + yPosition); cout << xPosition;
-        Gotoxy(38 + xPosition, 12 + yPosition); cout << yPosition;
+        gotoxy(38 + xPosition, 11 + yPosition); cout << xPosition;
+        gotoxy(38 + xPosition, 12 + yPosition); cout << yPosition;
         while(1){
             int input = getch();
             string temp;
             if (tolower(input) == 'y' || tolower(input) == 'x'){
-                Gotoxy(35 + xPosition, 14 + yPosition); cout << "Masukkan Nilai Untuk Merubah Posisinya.";
-                Gotoxy(35 + xPosition, 15 + yPosition); cout << "Tekan ENTER untuk konfirmasi perubahan!";
+                gotoxy(35 + xPosition, 14 + yPosition); cout << "Masukkan Nilai Untuk Merubah Posisinya.";
+                gotoxy(35 + xPosition, 15 + yPosition); cout << "Tekan ENTER untuk konfirmasi perubahan!";
                 if (tolower(input) == 'x'){
-                    Gotoxy(38 + xPosition, 11 + yPosition); cout << "   ";
-                    Gotoxy(38 + xPosition, 11 + yPosition); cin >> temp;
+                    gotoxy(38 + xPosition, 11 + yPosition); cout << "   ";
+                    gotoxy(38 + xPosition, 11 + yPosition); cin >> temp;
                     xPosition = filterNumber(temp, 'x');
                 } else if (tolower(input) == 'y'){
-                    Gotoxy(38 + xPosition, 12 + yPosition); cout << "   ";
-                    Gotoxy(38 + xPosition, 12 + yPosition); cin >> temp;
+                    gotoxy(38 + xPosition, 12 + yPosition); cout << "   ";
+                    gotoxy(38 + xPosition, 12 + yPosition); cin >> temp;
                     yPosition = filterNumber(temp, 'y');
                 } break;
             } else if (input == 75){
@@ -520,7 +504,7 @@ int loadImage(string location, int posX, int posY, char xBorder, char yBorder){
             temp[temp.length()-1] = ' ';
         }
         for (int x = 0; x < xMax; x++){
-            Gotoxy(x+posX, y+posY); cout << temp[x];}
+            gotoxy(x+posX, y+posY); cout << temp[x];}
     } imageData.close(); return 0;
 }
 
@@ -536,7 +520,7 @@ void animate(string location, int posX, int posY, char xBorder, char yBorder){
             while(temp.length() < xMax){
                 temp.resize(temp.length()+1);
                 temp[temp.length()-1] = ' ';
-            } for (int x = 0; x < xMax; x++){Gotoxy(posX+x, posY+y); cout << temp[x];}
+            } for (int x = 0; x < xMax; x++){gotoxy(posX+x, posY+y); cout << temp[x];}
         } getline(imageData, temp); Sleep(stoi(temp.substr(1)));
     } cout << endl;
 }
@@ -619,18 +603,18 @@ string changeCase(string teks, char to){
     else {cout << " [Ada masalah pada pemakaian fungsi changeCase!]"; system("pause");}
 }
 
-void Gotoxy(int x, int y) {
-    Cursorposition.X = x;
-    Cursorposition.Y = y;
-    SetConsoleCursorPosition(Console, Cursorposition);
+void gotoxy(int x, int y) {
+    CursorPosition.X = x;
+    CursorPosition.Y = y;
+    SetConsoleCursorPosition(console, CursorPosition);
 }
 
-void SetCursor(bool visible, DWORD size){
+void setcursor(bool visible, DWORD size){
 	if(size == 0) size = 20;
 	CONSOLE_CURSOR_INFO lpCursor;
 	lpCursor.bVisible = visible;
 	lpCursor.dwSize = size;
-	SetConsoleCursorInfo(Console,&lpCursor);
+	SetConsoleCursorInfo(console,&lpCursor);
 }
 
 void missing(string location, string problem){
