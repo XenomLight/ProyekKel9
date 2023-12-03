@@ -1,4 +1,0 @@
-Play       z
-Instruction
-Quit
-;
