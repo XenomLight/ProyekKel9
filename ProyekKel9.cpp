@@ -142,7 +142,7 @@ int menu_game(string userid,int skor){
     cout<<"\t=================\n";
     cout<<"\n\t1. Dodge the car\n";
     cout<<"\t2. Tebak angka\n";
-    cout<<"\t3. Game Egi";
+    cout<<"\t3. Tebak Kata";
     cout<<"\n\t4. Kembali ke halaman utama";
     cout<<"\n\t=========================";
 
